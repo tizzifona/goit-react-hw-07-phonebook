@@ -21,9 +21,12 @@ const ContactList = () => {
     contact.name.toLowerCase().includes(filter.toLowerCase())
   );
 
+  const isFiltering = filter !== '';
+  const hasContacts = filteredContacts.length > 0;
+
   return (
     <div>
-      {filteredContacts.length > 0 ? (
+      {hasContacts ? (
         <ul className={css.contactList}>
           {filteredContacts.map((contact) => (
             <ContactListItem
@@ -36,7 +39,7 @@ const ContactList = () => {
           ))}
         </ul>
       ) : (
-        <p className={css.filterNoContacts}>No contacts found</p>
+        isFiltering && <p className={css.filterNoContacts}>No contacts found</p>
       )}
     </div>
   );

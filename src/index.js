@@ -1,19 +1,25 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { persistStore } from 'redux-persist';
-import { PersistGate } from 'redux-persist/integration/react';
-import { store } from './components/Redux/store';
+import { configureStore } from '@reduxjs/toolkit';
+import axios from 'axios';
+
 import App from './components/App';
+import { contactsReducer } from './components/Redux/contactsSlice';
+import  filterReducer  from './components/Redux/filterSlice';
 
-const persistor = persistStore(store);
+axios.defaults.baseURL = "https://649bf2870480757192372e49.mockapi.io";
 
-ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+const store = configureStore({
+  reducer: {
+    contacts: contactsReducer,
+    filter: filterReducer,
+  },
+});
+
+createRoot(document.getElementById('root')).render(
+  <Provider store={store}>
         <App />
-      </PersistGate>
-    </Provider>
-  </React.StrictMode>
+       </Provider>
 );
+

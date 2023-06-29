@@ -1,36 +1,60 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-export const fetchContacts = createAsyncThunk('contacts/fetchAll', async () => {
+axios.defaults.baseURL = "https://649bf2870480757192372e49.mockapi.io";
+
+const handlePending = (state) => {
+  state.isLoading = true;
+  state.error = null;
+};
+
+const handleFulfilled = (state, action) => {
+  state.isLoading = false;
+  state.items = action.payload;
+};
+
+const handleFulfilledAdd = (state, action) => {
+  state.isLoading = false;
+  state.items.push(action.payload);
+};
+
+const handleFulfilledDelete = (state, action) => {
+  state.isLoading = false;
+  state.items = state.items.filter((contact) => contact.id !== action.payload);
+};
+
+const handleRejected = (state, action) => {
+  state.isLoading = false;
+  state.error = action.error.message;
+};
+
+export const fetchContacts = createAsyncThunk('contacts/fetchContacts', async (_, { rejectWithValue }) => {
   try {
-    const response = await axios.get('https://649bf2870480757192372e49.mockapi.io/contacts');
-    return response.data;
+    const { data } = await axios.get('/contacts');
+    return data;
   } catch (error) {
     console.error('Error fetching contacts:', error);
-    throw error;
+    throw rejectWithValue(error);
   }
 });
 
-export const addContact = createAsyncThunk('contacts/addContact', async ({ name, number }) => {
+export const addContact = createAsyncThunk('contacts/addContact', async ({ name, number }, { rejectWithValue }) => {
   try {
-    const response = await axios.post('https://649bf2870480757192372e49.mockapi.io/contacts', {
-      name,
-      number,
-    });
-    return response.data;
+    const { data } = await axios.post('/contacts', { name, number });
+    return data;
   } catch (error) {
     console.error('Error adding contact:', error);
-    throw error;
+    throw rejectWithValue(error);
   }
 });
 
-export const deleteContact = createAsyncThunk('contacts/deleteContact', async (contactId) => {
+export const deleteContact = createAsyncThunk('contacts/deleteContact', async (id, { rejectWithValue }) => {
   try {
-    await axios.delete(`https://649bf2870480757192372e49.mockapi.io/contacts/${contactId}`);
-    return contactId;
+    await axios.delete(`/contacts/${id}`);
+    return id;
   } catch (error) {
     console.error('Error deleting contact:', error);
-    throw error;
+    throw rejectWithValue(error);
   }
 });
 
@@ -44,47 +68,20 @@ const contactsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchContacts.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchContacts.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items = action.payload;
-      })
-      .addCase(fetchContacts.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message;
-      })
-      .addCase(addContact.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(addContact.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items.push(action.payload);
-      })
-      .addCase(addContact.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message;
-      })
-      .addCase(deleteContact.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteContact.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.items = state.items.filter((contact) => contact.id !== action.payload);
-      })
-      .addCase(deleteContact.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.error.message;
-      });
+      .addCase(fetchContacts.pending, handlePending)
+      .addCase(fetchContacts.fulfilled, handleFulfilled)
+      .addCase(fetchContacts.rejected, handleRejected)
+      .addCase(addContact.pending, handlePending)
+      .addCase(addContact.fulfilled, handleFulfilledAdd)
+      .addCase(deleteContact.pending, handlePending)
+      .addCase(deleteContact.fulfilled, handleFulfilledDelete)
+      .addMatcher(
+        (action) => action.type.endsWith('/rejected'),
+        handleRejected
+      );
   },
 });
 
 export const { actions: contactsActions, reducer: contactsReducer } = contactsSlice;
 export default contactsReducer;
-
-
 

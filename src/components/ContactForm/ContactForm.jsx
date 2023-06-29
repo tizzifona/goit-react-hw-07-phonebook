@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { addContact } from '../Redux/contactsSlice';
 import { nanoid } from '@reduxjs/toolkit';
@@ -7,23 +7,23 @@ import Notiflix from 'notiflix';
 
 const ContactForm = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector((state) => state.contacts);
+  const contactsSelector = useSelector((state) => state.contacts);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
 
     const form = e.target;
     const name = form.elements.name.value;
     const number = form.elements.number.value;
 
-    if (contacts.items.find((contact) => contact.name === name)) {
+    if (contactsSelector.items.find((contact) => contact.name === name)) {
       Notiflix.Notify.failure(`${name} is already in contacts.`);
       return;
     }
 
     dispatch(addContact({ name, number }));
     form.reset();
-  };
+  }, [contactsSelector.items, dispatch]);
 
   return (
     <form className={css.contactForm} onSubmit={handleSubmit}>
@@ -57,4 +57,3 @@ const ContactForm = () => {
 };
 
 export default ContactForm;
-
